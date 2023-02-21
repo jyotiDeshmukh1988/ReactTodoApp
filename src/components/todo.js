@@ -1,13 +1,31 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import './todo.css'
 import todo from "../components/images/todo.svg";
 
+const getLocalItems = () => {
+    let list = localStorage.getItem('lists');
+    console.log(list,typeof list)
+    if(list){
+        const locitems = JSON.parse(list);
+        return locitems
+    }
+    else{
+        return []
+    }
+}
+
 const Todo = () => {
     const [inputData,setInputData] = useState('');
-    const [items,setItems] = useState([]);
+    const [items,setItems] = useState(getLocalItems());
     const addItem = () => {
+        if(items.includes(inputData)){
+            alert(inputData + ' has already been added')
+            setInputData('')
+        }
+        else{
         setItems([...items,inputData])
         setInputData('')
+        }
     }
     const removeItem = (id) =>{
         const data = items.filter((item,ind)=>{
@@ -18,7 +36,9 @@ const Todo = () => {
     const removeAll = () => {
         setItems([])
     }
-
+    useEffect(()=>{
+       localStorage.setItem('lists', JSON.stringify(items))   
+    },[items])
     return <div className='main-div'>
         <div className='child-div'>
             <figure>
@@ -31,7 +51,7 @@ const Todo = () => {
             </div>
             <div className='showItems'>
                 {
-                    items.map((item,index)=>{
+                    items.length>0 && items.map((item,index)=>{
                         return <>
                          <div className="eachItem" key={index}>
                             <h3>{item}</h3>
