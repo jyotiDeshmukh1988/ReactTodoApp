@@ -4,7 +4,7 @@ import todo from "../components/images/todo.svg";
 
 const getLocalItems = () => {
     let list = localStorage.getItem('lists');
-    console.log(list,typeof list)
+    //console.log(list,typeof list)
     if(list){
         const locitems = JSON.parse(list);
         return locitems
@@ -17,19 +17,63 @@ const getLocalItems = () => {
 const Todo = () => {
     const [inputData,setInputData] = useState('');
     const [items,setItems] = useState(getLocalItems());
+    const [toggleSubmit,setToggleSubmit] = useState(true)
+    const [isEditItem,setIsEditItem] = useState(null)
+
     const addItem = () => {
-        if(items.includes(inputData)){
-            alert(inputData + ' has already been added')
+        if(!inputData){
+            alert('Please add an todo item')
             setInputData('')
         }
-        else{
-        setItems([...items,inputData])
-        setInputData('')
+        else if(inputData && !toggleSubmit){
+            const editnewitems = items.map((ele)=>{
+                if(ele.id === isEditItem){
+                    //console.log({...ele,name:inputData})
+                    return {...ele,name:inputData}
+                }  
+                return ele;
+            })
+           setItems(editnewitems) 
+           setToggleSubmit(true)
+            setInputData('')
+            setIsEditItem('')
+        }
+        else{  
+            let allInputData = ''
+        for (const [key, value] of Object.entries(items)) {
+            //console.log(`${key}: ${value.name}`);
+            if(value.name === inputData)
+            {
+                alert(inputData + 'is already added to the todo list')
+                setItems([...items]) ;
+                setInputData('') ;
+            }
+            else{
+                allInputData = { id:new Date().getTime().toString(),name:inputData}
+                setItems([...items,allInputData]) ;
+                setInputData('') ;
+            }
+            //if(value == 'somestring'){console.log('exists')}
+        }
+       
+            //const allInputData = { id:new Date().getTime().toString(),name:inputData}
+            //setItems([...items,allInputData]) ;
+            //setInputData('') ;
+            
         }
     }
+    const editItem = (id) =>{
+        //console.log('editItem',id)
+        let newEditItem = items.find(item => item.id === id)
+       // console.log('newEditItem',newEditItem)
+       setToggleSubmit(false)
+       setInputData(newEditItem.name)
+       setIsEditItem(id)
+    }
+
     const removeItem = (id) =>{
-        const data = items.filter((item,ind)=>{
-            return ind !== id
+        const data = items.filter((item)=>{
+            return id !== item.id
         })
         setItems(data)
     }
@@ -39,6 +83,7 @@ const Todo = () => {
     useEffect(()=>{
        localStorage.setItem('lists', JSON.stringify(items))   
     },[items])
+
     return <div className='main-div'>
         <div className='child-div'>
             <figure>
@@ -47,15 +92,19 @@ const Todo = () => {
             </figure>
             <div className='addItems'>
                 <input type="text" placeholder='Add Items....' value={inputData} onChange={(e)=>setInputData(e.target.value)}/>
-                <i className='fa fa-plus add-btn' title='Add Item' onClick={addItem}></i>
+                {toggleSubmit ? <i className='fa fa-plus add-btn' title='Add Item' onClick={addItem}></i> : <i className='fa fa-edit add-btn' title='Edit Item' onClick={addItem}></i>}
+                
             </div>
             <div className='showItems'>
                 {
-                    items.length>0 && items.map((item,index)=>{
+                    items.length>0 && items.map((item)=>{
                         return <>
-                         <div className="eachItem" key={index}>
-                            <h3>{item}</h3>
-                            <i className='far fa-trash-alt add-btn' title='Delete Item' onClick={()=>removeItem(index)}></i>
+                         <div className="eachItem" key={item.id}>
+                            <h3>{item.name}</h3>
+                            <div className="todo-btn">
+                            <i className='far fa-edit add-btn' title='Edit Item' onClick={()=>editItem(item.id)}></i>
+                            <i className='far fa-trash-alt add-btn' title='Delete Item' onClick={()=>removeItem(item.id)}></i>
+                            </div>
                         </div>
                         </>
                     })
